@@ -164,13 +164,17 @@ class TypedHistoryChecks(unittest.TestCase):
         cycle = {("A", "U"): "B", ("B", "V"): "A"}
         self.assertEqual(count_histories(("A", 5), {("A", 5), ("U", 1)}, cycle), 1)
         self.assertEqual(count_histories(("A", 5), {("A", 5), ("U", 1), ("V", 1)}, cycle), inf)
-        with self.assertRaises(ValueError):
-            count_histories(("A", 0), set(), cycle)
+        self.assertEqual(count_histories(("A", 0), set(), cycle), 0)
 
     def test_chain_is_a_special_case(self):
         for n in range(1, 129):
             leaves = {("apple", 1)} | {("times", d) for d in divisors(n) if d >= 2}
             self.assertEqual(count_histories(("apple", n), leaves, PRODUCTS), history_count(n))
+
+
+def load_tests(loader, tests, pattern):
+    tests.addTests(loader.loadTestsFromName("test_zero_histories"))
+    return tests
 
 
 if __name__ == "__main__":
