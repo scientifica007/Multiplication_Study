@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مختبر الكميات وذاكرة العمليات</title>
+<style>
+  :root { color-scheme: light dark; --page:#f6f5f1; --panel:#fffefa; --ink:#172d2d; --sub:#4a605e; --line:#c6ceca; --accent:#115d55; --on:#fff; --wash:#e5f2ed; --warn:#8c301d; }
+  @media (prefers-color-scheme:dark) { :root { --page:#142020; --panel:#1c2a29; --ink:#edf4ef; --sub:#b3c5c0; --line:#536763; --accent:#99d4bd; --on:#10291e; --wash:#293f38; --warn:#ffb6a4; } }
+  *{box-sizing:border-box} body{margin:0;color:var(--ink);background:var(--page);font:1rem/1.75 Inter,system-ui,Tahoma,sans-serif}
+  main{max-width:54rem;margin:auto;padding:clamp(1rem,4vw,2.4rem)} h1{font-size:clamp(1.65rem,5vw,2.4rem);line-height:1.35;margin:0 0 .5rem} h2{font-size:1.2rem;margin:0 0 .5rem} p{margin:.25rem 0 .75rem}
+  .intro,.note{color:var(--sub)} form{margin:1.4rem 0 1.1rem} label{display:block;font-weight:650} select,textarea,button{font:inherit}
+  select,textarea{width:100%;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:.45rem;padding:.55rem .7rem}
+  textarea{min-height:4.25rem;resize:vertical;font:1rem/1.55 "IBM Plex Mono",monospace;margin-top:.2rem}
+  button{border:0;border-radius:.45rem;padding:.6rem 1.2rem;background:var(--accent);color:var(--on);font-weight:650;cursor:pointer}
+  :is(button,textarea,select,summary):focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  .inputs,.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem}
+  .inputs{margin:.9rem 0 .6rem} .results{margin:.75rem 0 1.1rem} article{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:.6rem;padding:.85rem 1rem;overflow-wrap:anywhere}
+  .reading{font-weight:700;font-size:1.2rem;margin:.1rem 0 .2rem} .secondary{color:var(--sub)}
+  .comparison{padding:.65rem .9rem;background:var(--wash);border-inline-start:3px solid var(--accent);margin:0}
+  .error{color:var(--warn)} details{margin:.55rem 0} summary{cursor:pointer;color:var(--accent);font-weight:600}
+  .children{border-inline-start:1px solid var(--line);padding-inline-start:.8rem;margin:.4rem 0}
+  .children p{margin:.3rem 0} .reference{margin-top:1rem;padding-block:.55rem;border-top:1px solid var(--line)}
+  code{direction:ltr;unicode-bidi:isolate;font-family:"IBM Plex Mono",monospace;overflow-wrap:anywhere}
+  #pending{color:var(--sub);margin-inline-start:.8rem} [hidden]{display:none!important}
+  @media(max-width:39rem){.inputs,.results{grid-template-columns:1fr;gap:.55rem}textarea{min-height:3.25rem}.reading{font-size:1.1rem}}
+</style>
+</head>
+<body><main>
+<h1>مختبر الكميات وذاكرة العمليات</h1>
+<p class="intro">اختر تجربة أو عدّل تعبيريها. قارن ما يمكن قياسه، ثم افتح كل نتيجة لاسترجاع العملية ومدخلاتها بالترتيب.</p>
+<noscript><p>يلزم تفعيل JavaScript لإجراء الحسابات.</p></noscript>
+<form id="lab">
+  <label for="example">التجربة</label><select id="example"></select>
+  <div class="inputs">
+    <label>التعبير الأول<textarea id="expr-a" dir="ltr" spellcheck="false" maxlength="2400"></textarea></label>
+    <label>التعبير الثاني<textarea id="expr-b" dir="ltr" spellcheck="false" maxlength="2400"></textarea></label>
+  </div>
+  <button type="submit">احسب وقارن</button><span id="pending" role="status"></span>
+</form>
+<section id="out" aria-label="نتائج المقارنة">
+  <p id="comparison" class="comparison" role="status"></p>
+  <div class="results">
+    <article><h2>الناتج الأول</h2><div id="out-a"></div></article>
+    <article><h2>الناتج الثاني</h2><div id="out-b"></div></article>
+  </div>
+</section>
+<details class="reference"><summary>اختبار التكرار والتوزيع على مجموعة محددة</summary>
+<p>في التكرار يتراوح كل عامل من ١ إلى ١٢. وفي تجربة الشريط نختار لكلٍّ من الحركتين الأفقِيَّتين مسافة صحيحة من متر واحد إلى ستة أمتار شرقًا أو غربًا، ويكون عرض الشريط مترًا واحدًا.</p>
+<button type="button" id="run-trials">شغّل الاختبار</button>
+<div id="trials-result" role="status"></div>
+</details>
+<details class="reference"><summary>كيف أكتب تجربة جديدة؟</summary>
+<p>الأقواس تحدّد التجميع. يُنفَّذ الضرب قبل الجمع. تُقبل الأرقام العربية والغربية. تُقرأ التعليمات المتتابعة من اليسار إلى اليمين.</p>
+<ul>
+  <li><code>apple(6)</code> ست تفاحات، و<code>pear(2)</code> إجاصتان، و<code>times(2)</code> أخذ الدفعة مرتين. يقبل العدّ الأعداد الصحيحة غير السالبة.</li>
+  <li><code>fruit(4)</code> و<code>thing(4)</code> مدخلان مباشران. <code>asFruit(X)</code> و<code>asThing(X)</code> يرفعان هوية كمية معدودة ويحفظان عدد أفرادها. أما <code>asOne(X)</code> فيعدّ المدخل كله وحدة واحدة، مثل عدّ دفعة التفاح الواحدة أو قضيب واحد معلوم الطول.</li>
+  <li><code>X + Y</code> جمع بالوصف المشترك. يحتفظ الجمع بالنوع إذا اتّحد، ويرفع العددين المختلفي النوع إلى «شيء» في هذه النسخة. اختر <code>asFruit</code> إذا أردت العدّ على مستوى الفاكهة تحديدًا. جمع دفعتين من الأفراد يفترض عدّ كل فرد مرة واحدة، ويمكن أيضًا عدّ الوقائع المنفصلة.</li>
+  <li><code>side(6,-2)</code> إزاحة ستة أمتار أفقيًا ومترين في الاتجاه الرأسي السالب. تقبل المركّبات الكسور مثل <code>1/2</code> والأعداد العشرية. جمع الإزاحات يعطي الإزاحة الصافية.</li>
+  <li><code>U * V</code> بين ضلعين غير متوازيين يعطي مساحة متوازي الأضلاع. تُقرأ أيضًا المساحة الموجّهة بإشارة موجبة عند الدوران من الأول إلى الثاني عكس عقارب الساعة. جمع المساحات يحسب مقدار كل مساهمة، بما فيها التغطية المتكررة. وعند جمع مساحتي حركتين أفقيتين بالعرض الرأسي نفسه، يعرض المختبر كذلك مساحة الأرض المغطاة بافتراض تتابع الحركتين فوق خط واحد.</li>
+  <li><code>H</code> إسقاط عمودي على الأفقي، و<code>D</code> إسقاط عمودي على قطر الشبكة الصاعد بزاوية ٤٥°. التعبير <code>H * D</code> ينفّذ الأفقي أولًا ثم المائل. <code>side(6,2) * (H * D)</code> يطبّقهما على طرف الإزاحة.</li>
+</ul>
+</details>
+<details class="reference"><summary>ماذا تعني المساواة هنا؟</summary>
+<p>تقارن القراءة المعتادة النوع والقيمة. وفي المساحة نقارن أيضًا الإشارة عند طلب القراءة الموجّهة. وتتطلب مساواة السجل تطابق وصف المدخل الأوّلي أو تطابق العملية وشجرتَي مدخليها المرتّبين. كتابة عدد بالطريقتين <code>2</code> و<code>2.0</code> تعطي المدخل نفسه. ترتيب العاملين محفوظ، والتوقيت الزمني لإدخال كل منهما سؤال مستقل.</p>
+<p>قواعد هذه النسخة تتناول العدّ، وإزاحات في مستوى معلوم، ومساحات، وتحويلات ناتجة عن الإسقاطين. حسابات المختبر دقيقة على الأعداد النسبية. لكل ناتج هندسي امتداد في المستوى نفسه. عدّ القضبان كأجسام يتطلب معرفة عددها، وقياس طول قضيب يعطي كمية بالمتر.</p>
+</details>
+</main>
+<script id="quantities-core">
+"use strict";
+const Quantities = (() => {
+  function gcd(a, b) {
+    a = a < 0n ? -a : a;
+    while (b !== 0n) { const rem = a % b; a = b; b = rem; }
+    return a;
+  }
+  class Rational {
+    constructor(n, d = 1n) {
+      if (d <= 0n) throw Error("يجب أن يكون مقام الكسر موجبًا.");
+      const g = gcd(n, d);
+      this.n = n / g; this.d = d / g;
+      Object.freeze(this);
+    }
+    static parse(text) {
+      if (!/^-?\d+(?:\/\d+|\.\d+)?$/.test(text)) throw Error("عدد غير صالح.");
+      if (text.includes("/")) { const [n,d] = text.split("/"); return new Rational(BigInt(n), BigInt(d)); }
+      if (text.includes(".")) {
+        const decimals = text.length - text.indexOf(".") - 1;
+        return new Rational(BigInt(text.replace(".", "")), 10n ** BigInt(decimals));
+      }
+      return new Rational(BigInt(text));
+    }
+    add(b) { return new Rational(this.n*b.d + b.n*this.d, this.d*b.d); }
+    sub(b) { return new Rational(this.n*b.d - b.n*this.d, this.d*b.d); }
+    mul(b) { return new Rational(this.n*b.n, this.d*b.d); }
+    abs() { return this.n < 0n ? new Rational(-this.n,this.d) : this; }
+    toString() { return this.d === 1n ? String(this.n) : String(this.n) + "/" + String(this.d); }
+  }
+  const Q = s => Rational.parse(String(s));
+  const counted = new Set(["apple","pear","fruit","thing","times"]);
+  const fruit = new Set(["apple","pear","fruit"]);
+  const names = {apple:"تفاح",pear:"إجاص",fruit:"فاكهة",thing:"شيء",times:"تكرار",side:"إزاحة",area:"مساحة",map:"تحويل"};
+  const fail = text => { throw Error(text); };
+  class DomainError extends Error {}
+  const isolate = s => "\u2066" + s + "\u2069";
+  function node(rule, kind, values, children = [], oriented = null) {
+    return Object.freeze({rule,kind,values:Object.freeze(values),children:Object.freeze(children),oriented});
+  }
+  function literal(kind, values) {
+    if (counted.has(kind) && (values[0].n < 0n || values[0].d !== 1n))
+      fail("العدد المعدود يجب أن يكون عددًا صحيحًا غير سالب.");
+    return node("input",kind,values);
+  }
+  const horizontal = node("horizontal","map",[Q(1),Q(0),Q(0),Q(0)]);
+  const diagonal = node("diagonal","map",[Q("1/2"),Q("1/2"),Q("1/2"),Q("1/2")]);
+  function lift(a, target) {
+    const allowed = target === "fruit" ? fruit : counted;
+    if (!allowed.has(a.kind)) fail("رفع هذا المدخل إلى «" + names[target] + "» يحتاج إلى معلومة عدّ أخرى.");
+    return node("lift",target,[a.values[0]],[a]);
+  }
+  function asOne(a) { return node("one","thing",[Q(1)],[a]); }
+  function add(a,b) {
+    let kind = a.kind;
+    if (a.kind !== b.kind) {
+      if (!counted.has(a.kind) || !counted.has(b.kind)) fail("لم يُعيَّن وصف مشترك لجمع هاتين الكميتين.");
+      kind = "thing";
+    }
+    if (kind === "map") fail("الجمع بين التحويلات خارج قواعد هذه النسخة.");
+    const oriented = kind === "area" ? a.oriented.add(b.oriented) : null;
+    return node("add",kind,a.values.map((v,i) => v.add(b.values[i])),[a,b],oriented);
+  }
+  function applyMatrix(m,v) {
+    return [m[0].mul(v[0]).add(m[1].mul(v[1])),m[2].mul(v[0]).add(m[3].mul(v[1]))];
+  }
+  function multiply(a,b) {
+    if (b.kind === "times" && a.kind !== "times" && a.kind !== "map") {
+      const k = b.values[0];
+      return node("repeat",a.kind,a.values.map(v => v.mul(k)),[a,b],a.oriented && a.oriented.mul(k));
+    }
+    if (a.kind === "side" && b.kind === "side") {
+      const [x,y] = a.values, [u,v] = b.values;
+      const d = x.mul(v).sub(y.mul(u));
+      if (d.n === 0n) throw new DomainError("غير معرّف لبناء سطح. الضلعان لا يولّدان بُعدين مستقلين.");
+      return node("area","area",[d.abs()],[a,b],d);
+    }
+    if (a.kind === "side" && b.kind === "map")
+      return node("apply","side",applyMatrix(b.values,a.values),[a,b]);
+    if (a.kind === "map" && b.kind === "map") {
+      const [a0,a1,a2,a3] = a.values;
+      const left = applyMatrix(b.values,[a0,a2]), right = applyMatrix(b.values,[a1,a3]);
+      return node("compose","map",[left[0],right[0],left[1],right[1]],[a,b]);
+    }
+    throw new DomainError("غير معرّف. لا توجد في النموذج قاعدة ضرب تأخذ «" + names[a.kind] + "» أولًا و«" + names[b.kind] + "» ثانيًا.");
+  }
+  function sameReading(a,b) {
+    return a.kind === b.kind && a.values.every((v,i) => v.n === b.values[i].n && v.d === b.values[i].d);
+  }
+  function sameRecord(a,b) {
+    return a === b || (a.rule === b.rule && sameReading(a,b) && a.children.length === b.children.length &&
+      a.children.every((c,i) => sameRecord(c,b.children[i])));
+  }
+  function last(a) { return {rule:a.rule, kind:a.kind, inputs:a.children}; }
+  function coveredStrip(a) {
+    if (a.rule !== "add" || !a.children.every(child=>child.rule === "area")) return null;
+    const [[u,w],[v,z]]=a.children.map(child=>child.children);
+    if (u.values[1].n || v.values[1].n || w.values[0].n || !sameReading(w,z)) return null;
+    const positions=[Q(0),u.values[0],u.values[0].add(v.values[0])];
+    positions.sort((p,q)=>{
+      const d=p.n*q.d-q.n*p.d;
+      return d<0n ? -1 : d>0n ? 1 : 0;
+    });
+    return positions[2].sub(positions[0]).mul(w.values[1].abs());
+  }
+  const rules = {input:"مدخل أوّلي",horizontal:"الإسقاط الأفقي",diagonal:"الإسقاط المائل",lift:"رفع الهوية",one:"عدّ المدخل كله وحدة واحدة",add:"الجمع",repeat:"تكرار الدفعة",area:"إنشاء مساحة",apply:"تطبيق تحويل",compose:"تركيب تحويلين بالترتيب"};
+  function describe(a) {
+    const values = a.values.map(String);
+    if (a.kind === "side") return "إزاحة " + isolate("("+values.join(", ")+")") + " م";
+    if (a.kind === "map") {
+      if (a.rule === "horizontal" || a.rule === "diagonal") return rules[a.rule];
+      return "مصفوفة التحويل " + isolate("[["+values[0]+", "+values[1]+"], ["+values[2]+", "+values[3]+"]]");
+    }
+    const unit = {apple:"تفاحة",pear:"إجاصة",fruit:"ثمرة",thing:"شيء",times:"تكرار",area:"م²"}[a.kind];
+    return isolate(values[0]) + " " + unit;
+  }
+  function parse(source) {
+    const normalized = source.replace(/[٠-٩]/g,c => String(c.charCodeAt(0)-1632))
+      .replace(/[۰-۹]/g,c => String(c.charCodeAt(0)-1776)).replace(/،/g,",").replace(/٫/g,".")
+      .replace(/−/g,"-").replace(/×/g,"*");
+    const tokens = normalized.match(/[A-Za-z]+|\d+(?:\/\d+|\.\d+)?|\S/g) || [];
+    let i = 0;
+    function take(expected) { if (tokens[i++] !== expected) fail("يُنتظر الرمز " + isolate(expected) + " في هذا الموضع."); }
+    function scalar() {
+      let sign = ""; if (tokens[i] === "-") {sign = "-"; i++;}
+      return Q(sign + (tokens[i++] || ""));
+    }
+    function factor(depth) {
+      if (depth > 128) fail("التعبير أعمق من مجال محرّر هذه الصفحة.");
+      if (tokens[i] === "(") {i++; const a=sum(depth+1); take(")"); return a;}
+      const id = tokens[i++];
+      if (id === "H") return horizontal;
+      if (id === "D") return diagonal;
+      if (counted.has(id)) {take("("); const q=scalar(); take(")"); return literal(id,[q]);}
+      if (id === "side") {take("("); const x=scalar(); take(","); const y=scalar(); take(")"); return literal("side",[x,y]);}
+      if (id === "asFruit" || id === "asThing" || id === "asOne") {
+        take("("); const a=sum(depth+1); take(")");
+        return id === "asOne" ? asOne(a) : lift(a,id === "asFruit" ? "fruit" : "thing");
+      }
+      fail("مدخل غير معروف. راجع صيغ العدّ والإزاحة في تعليمات التجربة.");
+    }
+    function product(depth) {
+      let a=factor(depth);
+      while (tokens[i] === "*") {i++; a=multiply(a,factor(depth));}
+      return a;
+    }
+    function sum(depth) {
+      let a=product(depth);
+      while (tokens[i] === "+") {i++; a=add(a,product(depth));}
+      return a;
+    }
+    const result=sum(0);
+    if (i !== tokens.length) fail("يوجد رمز إضافي بعد نهاية التعبير.");
+    return result;
+  }
+  return {parse,add,multiply,lift,asOne,last,coveredStrip,sameReading,sameRecord,describe,rules,names,isolate,DomainError};
+})();
+</script>
+<script id="lab-interface">
+"use strict";
+const examples = [
+  ["الدفعة وعدد المرّات","apple(6) * times(2)","apple(2) * times(6)"],
+  ["تبديل العاملين مع طبيعتيهما","apple(6) * times(2)","times(2) * apple(6)"],
+  ["رفع الهوية إلى شيء","apple(2) + pear(2)","asThing(apple(4))"],
+  ["العدّ عند مستوى الفاكهة","asFruit(apple(2)) + asFruit(pear(2))","fruit(4)"],
+  ["عدّ ثمار الدفعة وعدّ الدفعة نفسها","asThing(apple(6))","asOne(apple(6))"],
+  ["تبديل ضلعي المستطيل","side(6,0) * side(0,2)","side(0,2) * side(6,0)"],
+  ["المحور نفسه والتكرار","side(2,0) * side(2,0)","side(2,0) * times(2)"],
+  ["التوزيع في اتجاه واحد","(side(6,0) + side(2,0)) * side(0,1)","(side(6,0) * side(0,1)) + (side(2,0) * side(0,1))"],
+  ["التوزيع عند الذهاب والعودة","(side(6,0) + side(-2,0)) * side(0,1)","(side(6,0) * side(0,1)) + (side(-2,0) * side(0,1))"],
+  ["تغيير موضع الأقواس","(apple(2) + apple(3)) + apple(4)","apple(2) + (apple(3) + apple(4))"],
+  ["تبديل الإسقاطين","side(6,2) * (H * D)","side(6,2) * (D * H)"],
+  ["أثر الارتفاع وسجل البداية","side(6,2) * (H * D)","side(6,4) * (H * D)"],
+  ["ذاكرة الصفر","apple(3) * times(0)","apple(9) * times(0)"]
+];
+const el=id=>document.getElementById(id);
+function element(tag,text,style) {
+  const obj=document.createElement(tag);
+  if (text !== undefined) obj.textContent=text;
+  if (style) obj.className=style;
+  return obj;
+}
+function historyOf(value, caption) {
+  const step=Quantities.last(value);
+  if (!step.inputs.length) return element("p",caption+" — "+Quantities.describe(value)+" · "+Quantities.rules[step.rule]);
+  const block=element("details");
+  block.append(element("summary",caption+" — "+Quantities.describe(value)));
+  const rows=element("div",undefined,"children");
+  rows.append(element("p",Quantities.rules[step.rule]+" · "+Quantities.names[step.kind]));
+  step.inputs.forEach((input,i)=>rows.append(historyOf(input,i===0?"المدخل الأول":"المدخل الثاني")));
+  block.append(rows);
+  return block;
+}
+function evaluateSide(field, target) {
+  target.replaceChildren();
+  try {
+    const val=Quantities.parse(field.value);
+    target.append(element("p",Quantities.describe(val),"reading"));
+    if (val.oriented !== null) {
+      const sign=val.oriented.n>0n ? "+" : "";
+      target.append(element("p","القراءة الموجّهة "+Quantities.isolate(sign+val.oriented)+" م²","secondary"));
+    }
+    const coverage=Quantities.coveredStrip(val);
+    if (coverage !== null) target.append(element("p","إذا بدأت الحركة الثانية حيث انتهت الأولى فوق الخط نفسه، فمساحة الأرض المغطّاة مرة واحدة على الأقل "+Quantities.isolate(coverage)+" م².","secondary"));
+    if (val.children.length) target.append(historyOf(val,"فكّ آخر عملية"));
+    else target.append(element("p",Quantities.rules[val.rule],"secondary"));
+    return val;
+  } catch(error) {
+    target.append(element("p",error.message,"error")); return null;
+  }
+}
+function compare() {
+  const a=evaluateSide(el("expr-a"),el("out-a")), b=evaluateSide(el("expr-b"),el("out-b"));
+  let message="تتطلب المقارنة ناتجين معرّفين.";
+  if (a && b) {
+    const parts=[Quantities.sameReading(a,b)?"القراءة المعتادة متساوية":"القراءة المعتادة مختلفة"];
+    if (a.oriented && b.oriented) parts.push(String(a.oriented)===String(b.oriented)?"القراءة الموجّهة متساوية":"القراءة الموجّهة مختلفة");
+    parts.push(Quantities.sameRecord(a,b)?"السجلّان متطابقان":"السجلّان مختلفان");
+    message=parts.join(" · ")+".";
+  }
+  el("comparison").textContent=message; el("out").hidden=false; el("pending").textContent="";
+}
+function choose() {
+  const selected=examples[Number(el("example").value)];
+  el("expr-a").value=selected[1]; el("expr-b").value=selected[2]; compare();
+}
+function runTrials() {
+  const read=Quantities.parse, products=new Set();
+  let pairs=0, recovered=0;
+  for (let a=1;a<=12;a++) for (let k=1;k<=12;k++) {
+    const value=read("apple("+a+") * times("+k+")");
+    const [left,right]=Quantities.last(value).inputs;
+    products.add(String(value.values[0])); pairs++;
+    if (left.kind==="apple" && right.kind==="times" &&
+        String(left.values[0])===String(a) && String(right.values[0])===String(k)) recovered++;
+  }
+  const north=read("side(0,1)");
+  const moves=Array.from({length:13},(_,i)=>i-6).filter(n=>n!==0).map(n=>read("side("+n+",0)"));
+  let equal=0, different=0, noSurface=0, orientedEqual=0;
+  for (const u of moves) for (const v of moves) {
+    const separate=Quantities.add(Quantities.multiply(u,north),Quantities.multiply(v,north));
+    let net;
+    try { net=Quantities.multiply(Quantities.add(u,v),north); }
+    catch (err) { if (!(err instanceof Quantities.DomainError)) throw err; noSurface++; continue; }
+    if (Quantities.sameReading(net,separate)) equal++; else different++;
+    if (String(net.oriented)===String(separate.oriented)) orientedEqual++;
+  }
+  const output=el("trials-result");
+  output.replaceChildren(
+    element("p","عدد العمليات "+pairs+"، وعدد نواتج العدّ المختلفة "+products.size+"، واستُعيد العاملان بترتيبهما في "+recovered+" عملية."),
+    element("p","المساحة المعتادة تساوت في "+equal+" حالة واختلفت في "+different+" حالة. تعذّر إنشاء سطح بالإزاحة الصافية في "+noSurface+" حالة."),
+    element("p","القراءة الموجّهة تساوت في "+orientedEqual+" من "+(equal+different)+" حالة كان فيها الطرفان معرّفين.")
+  );
+}
+examples.forEach(([title],i)=>{const option=element("option",title);option.value=i;el("example").append(option);});
+el("example").value="0";
+el("example").addEventListener("change",choose);
+el("lab").addEventListener("submit",event=>{event.preventDefault();compare();});
+el("run-trials").addEventListener("click",runTrials);
+for (const id of ["expr-a","expr-b"]) el(id).addEventListener("input",()=>{el("out").hidden=true;el("pending").textContent="اضغط «احسب وقارن» لقراءة التعديل.";});
+choose();
+</script>
+</body>
+</html>

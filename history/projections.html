@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أثر ترتيب الإسقاطين</title>
+<style>
+  :root { --foreground:#192d2c; --background:#fffefa; --border:#d7dfdc; --muted-foreground:#657976; --viz-series-1:#1766b0; --viz-series-2:#b14428; }
+  body { margin:0; padding:1rem; color:var(--foreground); background:var(--background); font:1rem/1.7 system-ui,sans-serif; }
+  h3 { font-size:1.5rem; margin:0 0 .6rem; } input[type=range] { width:100%; }
+  .viz-row { display:flex; gap:.5rem 1.2rem; flex-wrap:wrap; }
+  .tabular-nums { font-variant-numeric:tabular-nums; }
+
+  #projection-order-study { max-width: 36rem; margin-inline: auto; }
+  #pos-height-value { margin-inline-start: .45rem; }
+  #pos-drawing { display: block; width: 100%; margin-block: .35rem; overflow: visible; }
+  #pos-drawing text { font: inherit; font-size: 12px; fill: var(--foreground); }
+  #pos-drawing .pos-grid { stroke: var(--border); stroke-width: 1; }
+  #pos-drawing .pos-guide { stroke: var(--muted-foreground); stroke-width: 1.2; }
+  #pos-drawing .pos-route { stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  #pos-results > span { display: inline-flex; align-items: center; gap: .4rem; }
+  #projection-order-study .pos-diamond, #projection-order-study .pos-square { width: .65rem; height: .65rem; display: inline-block; flex: none; }
+  #projection-order-study .pos-diamond { background: var(--viz-series-1); transform: rotate(45deg); }
+  #projection-order-study .pos-square { background: var(--viz-series-2); }
+</style>
+</head>
+<body><main>
+<section id="projection-order-study" lang="ar" dir="rtl" aria-labelledby="pos-heading">
+  <h3 id="pos-heading">أثر ترتيب الإسقاطين</h3>
+  <div class="viz-controls">
+    <label class="form-label" for="pos-height">
+      ارتفاع البداية عند س = 6
+      <output id="pos-height-value" for="pos-height" class="tabular-nums">2</output>
+      <input class="form-range" id="pos-height" dir="ltr" type="range" min="0" max="6" step="1" value="2">
+    </label>
+  </div>
+  <svg id="pos-drawing" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pos-title pos-description" direction="ltr">
+    <title id="pos-title">مسارا الإسقاط من نقطة البداية على شبكة مربعة</title>
+    <desc id="pos-description">البداية (6, 2). ينتهي المسار المتصل عند (3, 3)، والمتقطع عند (4, 0).</desc>
+    <g id="pos-geometry"></g>
+  </svg>
+  <div id="pos-results" class="viz-row text-small" aria-live="polite" aria-atomic="true">
+    <span><span class="pos-diamond" aria-hidden="true"></span>الأفقي ثم المائل <bdi dir="ltr" class="tabular-nums" id="pos-first">(3, 3)</bdi></span>
+    <span><span class="pos-square" aria-hidden="true"></span>المائل ثم الأفقي <bdi dir="ltr" class="tabular-nums" id="pos-second">(4, 0)</bdi></span>
+  </div>
+</section>
+</main>
+<script>
+(() => {
+  const root = document.getElementById("projection-order-study");
+  const svg = root.querySelector("#pos-drawing");
+  const geometry = root.querySelector("#pos-geometry");
+  const heightControl = root.querySelector("#pos-height");
+  const heightValue = root.querySelector("#pos-height-value");
+  const firstResult = root.querySelector("#pos-first");
+  const secondResult = root.querySelector("#pos-second");
+  const description = root.querySelector("#pos-description");
+  const namespace = "http://www.w3.org/2000/svg";
+  const firstColor = "var(--viz-series-1)";
+  const secondColor = "var(--viz-series-2)";
+  const coord = ([x, y]) => "(" + x + ", " + y + ")";
+
+  function draw() {
+    const width = svg.getBoundingClientRect().width;
+    if (!width) return;
+    const h = Number(heightControl.value);
+    const start = [6, h];
+    const horizontal = [6, 0];
+    const middle = (6 + h) / 2;
+    const diagonal = [middle, middle];
+    const endFirst = [3, 3];
+    const endSecond = [middle, 0];
+    const originX = 30;
+    const scale = (width - originX - 24) / 7.5;
+    const originY = 20 + 6.7 * scale;
+    const height = Math.ceil(originY + 27);
+    const point = ([x, y]) => [originX + x * scale, originY - y * scale];
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.style.height = height + "px";
+
+    const drawing = document.createDocumentFragment();
+    function mark(tag, attributes, value) {
+      const node = document.createElementNS(namespace, tag);
+      for (const [key, val] of Object.entries(attributes)) node.setAttribute(key, val);
+      if (value !== undefined) node.textContent = value;
+      drawing.appendChild(node);
+      return node;
+    }
+    function line(from, to, className) {
+      const [x1, y1] = point(from);
+      const [x2, y2] = point(to);
+      mark("line", {x1, y1, x2, y2, class: className});
+    }
+    function label(x, y, words, anchor = "middle") {
+      mark("text", {x, y, "text-anchor": anchor}, words);
+    }
+    function route(coords, color, dashed) {
+      const positions = coords.map(point);
+      mark("polyline", {
+        points: positions.map(p => p.join(",")).join(" "), class: "pos-route",
+        stroke: color, "stroke-dasharray": dashed ? "6 5" : "none"
+      });
+      for (let i = 1; i < positions.length; i++) {
+        const [x0, y0] = positions[i - 1];
+        const [x1, y1] = positions[i];
+        const length = Math.hypot(x1 - x0, y1 - y0);
+        if (length < 21) continue;
+        const dx = (x1 - x0) / length;
+        const dy = (y1 - y0) / length;
+        const x = x0 + (x1 - x0) * 0.51;
+        const y = y0 + (y1 - y0) * 0.51;
+        const tip = [x + 4.5 * dx, y + 4.5 * dy];
+        const left = [x - 4 * dx + 3.5 * dy, y - 4 * dy - 3.5 * dx];
+        const right = [x - 4 * dx - 3.5 * dy, y - 4 * dy + 3.5 * dx];
+        mark("polygon", {points: [tip, left, right].map(p => p.join(",")).join(" "), fill: color});
+      }
+    }
+    for (let col = 1; col <= 7; col++) line([col, 0], [col, 6.5], "pos-grid");
+    for (let row = 1; row <= 6; row++) line([0, row], [7.4, row], "pos-grid");
+    line([0, 0], [7.5, 0], "pos-guide");
+    line([0, 0], [0, 6.65], "pos-guide");
+    line([0, 0], [6.5, 6.5], "pos-guide");
+    for (const tick of [0, 2, 4, 6]) {
+      label(point([tick, 0])[0], originY + 18, tick);
+      if (tick) label(originX - 10, point([0, tick])[1] + 4, tick, "end");
+    }
+    label(point([7.5, 0])[0] + 4, originY - 7, "س");
+    label(originX - 9, point([0, 6.65])[1], "ع");
+    const [lineX, lineY] = point([6.5, 6.5]);
+    label(lineX, lineY - 7, "المائل");
+
+    route([start, horizontal, endFirst], firstColor, false);
+    route([start, diagonal, endSecond], secondColor, true);
+    for (const [position, color] of [[horizontal, firstColor], [diagonal, secondColor]]) {
+      const [cx, cy] = point(position);
+      mark("circle", {cx, cy, r: 3.3, fill: "var(--background)", stroke: color, "stroke-width": 1.8});
+    }
+    const [ax, ay] = point(endFirst);
+    mark("polygon", {points: [[ax, ay-7], [ax+7, ay], [ax, ay+7], [ax-7, ay]].map(p => p.join(",")).join(" "), fill: firstColor});
+    const [bx, by] = point(endSecond);
+    mark("rect", {x: bx - 5.3, y: by - 5.3, width: 10.6, height: 10.6, fill: secondColor});
+    const [sx, sy] = point(start);
+    mark("circle", {cx: sx, cy: sy, r: 5.5, fill: "var(--background)", stroke: "var(--foreground)", "stroke-width": 2});
+    label(sx + 24, sy - 3, "البداية");
+    geometry.replaceChildren(drawing);
+    heightValue.textContent = h;
+    firstResult.textContent = coord(endFirst);
+    secondResult.textContent = coord(endSecond);
+    description.textContent = "البداية " + coord(start) + ". الأفقي ثم المائل ينتهي عند " + coord(endFirst) +
+      "، والمائل ثم الأفقي عند " + coord(endSecond) + ".";
+  }
+  heightControl.addEventListener("input", draw);
+  let lastWidth = 0;
+  const observer = new ResizeObserver(entries => {
+    const width = entries[0].contentRect.width;
+    if (width !== lastWidth) { lastWidth = width; draw(); }
+  });
+  observer.observe(svg);
+  draw();
+})();
+</script>
+</body>
+</html>
