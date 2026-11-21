@@ -174,6 +174,7 @@ class TypedHistoryChecks(unittest.TestCase):
 
 def load_tests(loader, tests, pattern):
     tests.addTests(loader.loadTestsFromName("test_zero_histories"))
+    tests.addTests(loader.loadTestsFromName("test_square_extension"))
     return tests
 
 
