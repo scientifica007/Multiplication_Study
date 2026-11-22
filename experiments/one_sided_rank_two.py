@@ -95,6 +95,27 @@ def unpack_with_zero(record: Output) -> tuple[Atom, Atom]:
     return Atom('A', a), Atom('B', n)
 
 
+
+
+def compress_free_receipts(formal: dict[int, int]) -> Output:
+    """From free abelian group on labels a to Z^2: e_a -> (1,a)."""
+    return Output(sum(formal.values()),
+                  sum(a * coefficient for a, coefficient in formal.items()))
+
+
+def kernel_relation(a: int) -> dict[int, int]:
+    """A basis generator for the kernel; defined only if a not in (0,1)."""
+    if a in (0, 1):
+        raise ValueError('0 and 1 are the two quotient basis labels')
+    return {a: 1, 0: a-1, 1: -a}
+
+
+def canonical_free_representative(formal: dict[int, int]) -> dict[int, int]:
+    """Representative supported on {0,1} with same compressed value."""
+    c = compress_free_receipts(formal)
+    return {0: c.rate-c.reading, 1: c.reading}
+
+
 def proportional_vectors(u: tuple[int, int], v: tuple[int, int]) -> bool:
     """Rational dependence of two vectors in Z^2 (not a generic test)."""
     return u[0] * v[1] == u[1] * v[0]
