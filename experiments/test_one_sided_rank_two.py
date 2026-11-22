@@ -2,7 +2,7 @@
 import unittest
 from itertools import product
 from signed_provenance import Atom
-from one_sided_rank_two import Output, multiply, unpack, output_measure, left_defect, proportional_vectors, multiply_with_zero, unpack_with_zero
+from one_sided_rank_two import Output, multiply, unpack, output_measure, left_defect, proportional_vectors, multiply_with_zero, unpack_with_zero, compress_free_receipts, kernel_relation, canonical_free_representative
 
 
 class RankTwoWitnessTests(unittest.TestCase):
@@ -80,6 +80,21 @@ class RankTwoWitnessTests(unittest.TestCase):
             unpack_with_zero(Output(0,0))
         with self.assertRaises(ValueError):
             unpack_with_zero(Output(3,2))
+
+    def test_universal_compression_kernel_basis(self):
+        for a in range(-30,31):
+            if a in (0,1):
+                continue
+            relation = kernel_relation(a)
+            self.assertEqual(compress_free_receipts(relation), Output(0,0))
+        sample = {a: ((a*a + 3*a + 1) % 7) - 3 for a in range(-5,6)}
+        r = canonical_free_representative(sample)
+        self.assertEqual(compress_free_receipts(sample),
+                         compress_free_receipts(r))
+        self.assertEqual(compress_free_receipts({0:1,2:1}),
+                         compress_free_receipts({1:2}))
+        self.assertEqual(compress_free_receipts({0:1}), Output(1,0))
+        self.assertEqual(compress_free_receipts({1:1}), Output(1,1))
 
     def test_rational_slope_separation(self):
         for a, b in product(range(-8, 9), repeat=2):
