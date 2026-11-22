@@ -50,7 +50,7 @@ function addsRank(pivots, candidate) {
   return false;
 }
 
-function makeStudy(size, recipes, readings) {
+function recipeMatrices(size, recipes) {
   if (!Number.isSafeInteger(size) || size < 1) throw new RangeError('Invalid size');
   const actions = new Map();
   for (const [name, matrix] of Object.entries(recipes)) {
@@ -59,6 +59,11 @@ function makeStudy(size, recipes, readings) {
     }
     actions.set(name, Array.from(matrix, row => vector(row, size, true)));
   }
+  return actions;
+}
+
+function makeStudy(size, recipes, readings) {
+  const actions = recipeMatrices(size, recipes);
   const outputs = new Map(Object.entries(readings).map(
     ([name, row]) => [name, vector(row, size, false)]
   ));
@@ -120,15 +125,19 @@ function makeStudy(size, recipes, readings) {
   return {probes: Object.freeze(probes), run, read, distinguish, groups};
 }
 
-function fruitStudy() {
+function fruitRecipes() {
   // Coordinate order: unmarked apple, pear, marked apple.
-  return makeStudy(3, {
+  return {
     S: [[0, 0, 0], [0, 1, 0], [1, 0, 1]],
     D: [[1, 0, 0], [0, 1, 0], [0, 0, 2]]
-  }, {total: [1, 1, 1]});
+  };
 }
 
-module.exports = {makeStudy, fruitStudy};
+function fruitStudy() {
+  return makeStudy(3, fruitRecipes(), {total: [1, 1, 1]});
+}
+
+module.exports = {makeStudy, fruitStudy, fruitRecipes, recipeMatrices, vector, dot};
 
 if (require.main === module) {
   const study = fruitStudy();
