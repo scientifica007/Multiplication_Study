@@ -177,6 +177,7 @@ def load_tests(loader, tests, pattern):
     tests.addTests(loader.loadTestsFromName("test_square_extension"))
     tests.addTests(loader.loadTestsFromName("test_packing_distribution"))
     tests.addTests(loader.loadTestsFromName("test_contextual_equality"))
+    tests.addTests(loader.loadTestsFromName("test_sum_memory"))
     return tests
 
 
