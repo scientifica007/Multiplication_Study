@@ -147,7 +147,7 @@ def refine_partition(algebra: FiniteSortedAlgebra,
             nxt[x] = labels[key]
         if all(blocks[x] == blocks[y] for x in algebra.elements for y in algebra.elements
                if nxt[x] == nxt[y]) and all(nxt[x] == nxt[y] for x in algebra.elements
-                                            for y in algebra.elements if blocks[x] == blocks[y]):
+                                        for y in algebra.elements if blocks[x] == blocks[y]):
             return nxt, rounds
         blocks = nxt
         rounds += 1
