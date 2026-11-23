@@ -101,7 +101,6 @@ class BothSidedTests(unittest.TestCase):
 
 if __name__=='__main__':unittest.main()
 
-
 class AdditiveGroupTests(unittest.TestCase):
     def test_cyclic_z3_symmetric_signed_pair_collapse(self):
         from two_sided_distributivity import cyclic_bilinear_map
