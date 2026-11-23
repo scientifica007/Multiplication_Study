@@ -187,4 +187,17 @@ class SymbolicCapacityTests(unittest.TestCase):
         self.assertIsNone(add_hist(a,b,capacity=1))
         self.assertNotEqual(add_hist(a,b,capacity=2),None)
 
+
+    def test_21_larger_capacity_refines_equivalence_on_shared_histories(self):
+        for probes in (False, True):
+            for h in (1, 2):
+                older = self.quotients[h, probes]
+                newer = self.quotients[h+1, probes]
+                projections = {}
+                for layer in older.layers:
+                    for x in layer:
+                        projections.setdefault(newer.block[x], set()).add(older.block[x])
+                self.assertTrue(all(len(old_classes) == 1
+                                    for old_classes in projections.values()))
+
 if __name__=='__main__':unittest.main()
