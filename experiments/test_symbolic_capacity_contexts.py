@@ -187,7 +187,6 @@ class SymbolicCapacityTests(unittest.TestCase):
         self.assertIsNone(add_hist(a,b,capacity=1))
         self.assertNotEqual(add_hist(a,b,capacity=2),None)
 
-
     def test_21_larger_capacity_refines_equivalence_on_shared_histories(self):
         for probes in (False, True):
             for h in (1, 2):
